@@ -31,6 +31,7 @@ dependencies:
     cupertino_icons: ^1.0.8
     flutter:
         sdk: flutter
+    geolocator: ^14.0.1
     http: ^1.4.0
     image_picker: ^1.1.2
     path: ^1.9.1
@@ -65,9 +66,9 @@ flutter:
     # list giving the asset and other descriptors for the font. For
     # example:
     fonts:
-      - family: Inter
-        fonts:
-          - asset: assets/fonts/Inter-Font.ttf
+        - family: Inter
+          fonts:
+              - asset: assets/fonts/Inter-Font.ttf
     #   - family: Trajan Pro
     #     fonts:
     #       - asset: fonts/TrajanPro.ttf
