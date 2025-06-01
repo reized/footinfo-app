@@ -14,11 +14,12 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-    final List<Widget> _pages = [
-    HomePage(),
-    BrowsePage(),
-    FavoritePage(),
-    ProfilePage(),
+  // Menggunakan IndexedStack untuk mempertahankan state setiap halaman
+  final List<Widget> _pages = [
+    const HomePage(),
+    const BrowsePage(),
+    const FavoritePage(),
+    const ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -29,10 +30,9 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
-      body: _pages[_selectedIndex],
+      // Menggunakan IndexedStack agar widget tidak di-dispose
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: _onItemTapped,

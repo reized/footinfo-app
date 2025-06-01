@@ -13,13 +13,14 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-// widget dipertahankan saat navigasi
-class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
   UserModel? _currentUser;
   List<Team> _nearbyTeams = [];
   String _userLocation = 'Unknown';
   bool _isLoadingLocation = false;
   bool _isLoadingTeams = false;
+  bool _hasInitialized = false; // Flag untuk mencegah reload berulang
 
   @override
   bool get wantKeepAlive => true;
@@ -27,15 +28,18 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+    // Hanya load jika belum pernah di-initialize
+    if (!_hasInitialized) {
+      _loadInitialData();
+    }
   }
 
   Future<void> _loadInitialData() async {
+    if (_hasInitialized) return; // Prevent multiple calls
+
+    _hasInitialized = true;
     await _loadCurrentUser();
-    // Hanya load sekali saat pertama kali
-    if (_nearbyTeams.isEmpty) {
-      await _getCurrentLocationAndTeams();
-    }
+    await _getCurrentLocationAndTeams();
   }
 
   Future<void> _loadCurrentUser() async {
@@ -44,13 +48,17 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     if (userId != null) {
       final userService = UserService();
       final user = await userService.getUserById(userId);
-      setState(() {
-        _currentUser = user;
-      });
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+        });
+      }
     }
   }
 
   Future<void> _getCurrentLocationAndTeams() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoadingLocation = true;
       _isLoadingTeams = true;
@@ -60,30 +68,41 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
       // Get location info using LBS service
       Map<String, dynamic> locationInfo = await LBSService.getLocationInfo();
 
-      setState(() {
-        if (locationInfo['status'] == 'success') {
-          _userLocation = locationInfo['locationName'];
-        } else {
-          _userLocation = locationInfo['message'] ?? 'Unable to get location';
-        }
-        _isLoadingLocation = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (locationInfo['status'] == 'success') {
+            _userLocation = locationInfo['locationName'];
+          } else {
+            _userLocation = locationInfo['message'] ?? 'Unable to get location';
+          }
+          _isLoadingLocation = false;
+        });
+      }
 
       // Fetch nearby teams using LBS service
       List<Team> teams = await LBSService.getNearbyTeams(limit: 6);
 
-      setState(() {
-        _nearbyTeams = teams;
-        _isLoadingTeams = false;
-      });
+      if (mounted) {
+        setState(() {
+          _nearbyTeams = teams;
+          _isLoadingTeams = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _userLocation = 'Error getting location';
-        _isLoadingLocation = false;
-        _isLoadingTeams = false;
-      });
+      if (mounted) {
+        setState(() {
+          _userLocation = 'Error getting location';
+          _isLoadingLocation = false;
+          _isLoadingTeams = false;
+        });
+      }
       print('Error in _getCurrentLocationAndTeams: $e');
     }
+  }
+
+  // Method untuk refresh manual
+  Future<void> _onRefresh() async {
+    await _getCurrentLocationAndTeams();
   }
 
   String _getGreeting() {
@@ -99,7 +118,10 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    super.build(
+      context,
+    ); // PENTING: Panggil super.build() untuk AutomaticKeepAliveClientMixin
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -109,9 +131,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         elevation: 0,
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          await _getCurrentLocationAndTeams();
-        },
+        onRefresh: _onRefresh, // Hanya refresh data, bukan initialize ulang
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16.0),
