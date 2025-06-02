@@ -76,40 +76,15 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
     }
   }
 
-  Future<void> _getInitialRandomPlayer() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final player = await RandomPlayerService.getRandomPlayer();
-      if (mounted) {
-        setState(() {
-          _currentPlayer = player;
-          _isLoading = false;
-        });
-
-        if (player != null) {
-          _fadeAnimationController.forward();
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorSnackBar('Failed to load random player');
-      }
-    }
-  }
-
   Future<void> _getRandomPlayer() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Fade out current player
-    await _fadeAnimationController.reverse();
+    // Fade out current player if exists
+    if (_currentPlayer != null) {
+      await _fadeAnimationController.reverse();
+    }
 
     try {
       final player = await RandomPlayerService.getRandomPlayer();
@@ -154,7 +129,9 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
       _shakeDetector.startListening(onShakeDetected: _onShakeDetected);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Shake detection enabled - shake your device to get a player'),
+          content: Text(
+            'Shake detection enabled - shake your device to get a random player',
+          ),
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
         ),
@@ -195,7 +172,9 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
               color: _isShakeEnabled ? Colors.green : Colors.grey,
             ),
             onPressed: _toggleShakeDetection,
-            tooltip: _isShakeEnabled ? 'Disable Shake' : 'Enable Shake',
+            tooltip: _isShakeEnabled
+                ? 'Disable Shake Detection'
+                : 'Enable Shake Detection',
           ),
         ],
       ),
@@ -230,9 +209,13 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                       child: Row(
                         children: [
                           Icon(
-                            Icons.phone_android,
+                            _isShakeEnabled
+                                ? Icons.phone_android
+                                : Icons.phone_android_outlined,
                             size: 32,
-                            color: Theme.of(context).primaryColor,
+                            color: _isShakeEnabled
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey,
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -240,16 +223,22 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Shake Your Phone!',
+                                  _isShakeEnabled
+                                      ? 'Shake Detection Active!'
+                                      : 'Shake Detection Disabled',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).primaryColor,
+                                    color: _isShakeEnabled
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.grey,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Shake your device or tap the button below to discover random football players',
+                                  _isShakeEnabled
+                                      ? 'Shake your device to discover random football players'
+                                      : 'Enable shake detection or use the button below',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[600],
@@ -302,12 +291,26 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Shake your device to start!',
+                              _isShakeEnabled
+                                  ? 'Shake your device to start!'
+                                  : 'Tap the button below to start!',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey[600],
                               ),
+                              textAlign: TextAlign.center,
                             ),
+                            if (!_isShakeEnabled) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Or enable shake detection above',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -320,7 +323,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _isLoading ? null : _getRandomPlayer,
-                      icon: const Icon(Icons.refresh),
+                      icon: const Icon(Icons.shuffle),
                       label: const Text('Get Random Player'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -328,6 +331,20 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Status Text
+                  Text(
+                    _isShakeEnabled
+                        ? 'Shake detection is active'
+                        : 'Shake detection is disabled',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _isShakeEnabled ? Colors.green : Colors.grey,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
