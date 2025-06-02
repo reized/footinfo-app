@@ -294,14 +294,14 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.purple,
-                    Colors.purple.withOpacity(0.8),
-                  ],
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withAlpha(180),
+                    ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.3),
+                    color: Theme.of(context).primaryColor.withAlpha(80),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
