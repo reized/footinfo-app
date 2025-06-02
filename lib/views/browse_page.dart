@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:footinfo_app/models/player.dart';
 import 'package:footinfo_app/models/team.dart';
 import 'package:footinfo_app/views/player_detail.dart';
+import 'package:footinfo_app/views/random_player_page.dart';
 import 'package:footinfo_app/views/team_detail.dart';
 import 'package:http/http.dart' as http;
 
@@ -102,7 +103,20 @@ class _BrowsePageState extends State<BrowsePage> {
     final displayPlayers = _allPlayers.take(_visibleCount).toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Browse')),
+      appBar: AppBar(
+        title: Text('Browse'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RandomPlayerPage()),
+              );
+            },
+            icon: Icon(Icons.shuffle),
+          ),
+        ],
+      ),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
