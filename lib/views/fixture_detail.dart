@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/fixture.dart';
+import '../services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FixtureDetailPage extends StatefulWidget {
   final Fixture fixture;
@@ -13,50 +15,157 @@ class FixtureDetailPage extends StatefulWidget {
 class _FixtureDetailPageState extends State<FixtureDetailPage> {
   bool _isNotificationEnabled = false;
   bool _showTimeZones = false;
+  bool _isLoading = false;
 
-  void _toggleNotification() {
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationState();
+  }
+
+  // Load notification state from SharedPreferences
+  Future<void> _loadNotificationState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'notification_${widget.fixture.id}';
     setState(() {
-      _isNotificationEnabled = !_isNotificationEnabled;
+      _isNotificationEnabled = prefs.getBool(key) ?? false;
+    });
+  }
+
+  // Save notification state to SharedPreferences
+  Future<void> _saveNotificationState(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'notification_${widget.fixture.id}';
+    await prefs.setBool(key, enabled);
+  }
+
+  Future<void> _toggleNotification() async {
+    setState(() {
+      _isLoading = true;
     });
 
-    if (_isNotificationEnabled) {
-      // Show snackbar when notification is enabled
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.notifications_active, color: Colors.white),
-              const SizedBox(width: 8),
-              const Text('Pengingat pertandingan diaktifkan'),
-            ],
+    try {
+      // Request permission first
+      final hasPermission = await NotificationService.requestPermissions();
+
+      if (!hasPermission) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text('Notification permission denied'),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final newState = !_isNotificationEnabled;
+
+      if (newState) {
+        // Enable notification
+
+        // Show immediate confirmation notification
+        await NotificationService.showInstantNotification(
+          id: 999, // Use different ID for instant notification
+          title: '✅ Reminder Enabled!',
+          body:
+              'You will be notified 1 hour before ${widget.fixture.homeTeamName} vs ${widget.fixture.awayTeamName}',
+        );
+
+        // Schedule the actual match reminder
+        await NotificationService.scheduleMatchReminder(widget.fixture);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.notifications_active, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Match reminder set for ${widget.fixture.homeTeamName} vs ${widget.fixture.awayTeamName}',
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        // Disable notification
+        await NotificationService.cancelNotification(widget.fixture.id);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.notifications_off, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text('Match reminder cancelled'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+
+      // Update state and save to preferences
+      setState(() {
+        _isNotificationEnabled = newState;
+      });
+      await _saveNotificationState(newState);
+    } catch (e) {
+      print('Error toggling notification: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('Failed to set reminder'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } else {
-      // Show snackbar when notification is disabled
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.notifications_off, color: Colors.white),
-              const SizedBox(width: 8),
-              const Text('Pengingat pertandingan dinonaktifkan'),
-            ],
-          ),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: const Duration(seconds: 3),
-        ),
-      );
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -294,9 +403,9 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withAlpha(180),
-                    ],
+                    Theme.of(context).primaryColor,
+                    Theme.of(context).primaryColor.withAlpha(180),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
@@ -409,9 +518,7 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
                         borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                          color: Colors.grey.withOpacity(0.3),
-                        ),
+                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -516,6 +623,7 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
               height: _showTimeZones ? null : 0,
               child: _showTimeZones
                   ? Container(
+                      margin: const EdgeInsets.only(top: 16),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -657,7 +765,7 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Get notified before the match starts',
+                    'Get notified 1 hour before the match starts',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   const SizedBox(height: 16),
@@ -677,15 +785,23 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                               : Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
-                          _isNotificationEnabled
-                              ? Icons.notifications_active
-                              : Icons.notifications_off,
-                          color: _isNotificationEnabled
-                              ? Colors.green
-                              : Colors.grey,
-                          size: 24,
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                _isNotificationEnabled
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_off,
+                                color: _isNotificationEnabled
+                                    ? Colors.green
+                                    : Colors.grey,
+                                size: 24,
+                              ),
                       ),
                       title: Text(
                         _isNotificationEnabled
@@ -698,16 +814,18 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                       ),
                       subtitle: Text(
                         _isNotificationEnabled
-                            ? 'You will be notified 30 minutes before kickoff'
+                            ? 'You will be notified 1 hour before kickoff'
                             : 'Tap to enable match reminder',
                         style: const TextStyle(fontSize: 12),
                       ),
                       trailing: Switch(
                         value: _isNotificationEnabled,
-                        onChanged: (value) => _toggleNotification(),
+                        onChanged: _isLoading
+                            ? null
+                            : (value) => _toggleNotification(),
                         activeColor: Colors.green,
                       ),
-                      onTap: _toggleNotification,
+                      onTap: _isLoading ? null : _toggleNotification,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
