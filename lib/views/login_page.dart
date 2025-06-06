@@ -4,58 +4,175 @@ import 'package:footinfo_app/views/main_page.dart';
 import 'register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final userService = UserService();
-
-  LoginPage({super.key});
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _login(BuildContext context) async {
-    final user = await userService.getUser(
-      usernameController.text,
-      passwordController.text,
-    );
-    if (user != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setInt('userId', user.id!);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => MainPage()),
-      );
-    } else {
+    if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login gagal')),
+        const SnackBar(content: Text('Please fill all fields')),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await userService.getUser(
+        usernameController.text,
+        passwordController.text,
+      );
+      
+      if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setInt('userId', user.id!);
+        
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invalid username or password')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-                controller: usernameController,
-                decoration: InputDecoration(labelText: 'Username')),
-            TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: 'Password')),
-            SizedBox(height: 16),
-            ElevatedButton(
-                onPressed: () => _login(context), child: Text('Login')),
-            TextButton(
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => RegisterPage()));
-                },
-                child: Text('Belum punya akun? Daftar')),
-          ],
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo and App Name
+                Icon(
+                  Icons.sports_soccer,
+                  size: 80,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Footinfo',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Welcome back!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Login Form
+                TextField(
+                  controller: usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Login Button
+                ElevatedButton(
+                  onPressed: _isLoading ? null : () => _login(context),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32),
+                    ),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text(
+                          'Login',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Register Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => RegisterPage()),
+                        );
+                      },
+                      child: const Text('Register'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

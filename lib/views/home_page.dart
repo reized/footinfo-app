@@ -474,7 +474,7 @@ class _HomePageState extends State<HomePage>
                   child: Column(
                     children: [
                       Icon(
-                        Icons.sports_soccer,
+                        Icons.shield_outlined,
                         size: 48,
                         color: Colors.grey[400],
                       ),
