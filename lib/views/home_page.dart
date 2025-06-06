@@ -360,7 +360,10 @@ class _HomePageState extends State<HomePage>
               // Today's Fixtures Section
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: Colors.green),
+                  Icon(
+                    Icons.calendar_today,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   const Text(
                     "Today's Fixtures",
@@ -412,7 +415,10 @@ class _HomePageState extends State<HomePage>
               // Clubs Around You Section
               Row(
                 children: [
-                  const Icon(Icons.location_on, color: Colors.red),
+                  Icon(
+                    Icons.location_on,
+                    color: Theme.of(context).primaryColor,
+                  ),
                   const SizedBox(width: 8),
                   const Text(
                     'Clubs Around You',

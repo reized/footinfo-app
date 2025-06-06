@@ -113,7 +113,7 @@ class _BrowsePageState extends State<BrowsePage> {
                 MaterialPageRoute(builder: (_) => const RandomPlayerPage()),
               );
             },
-            icon: Icon(Icons.shuffle),
+            icon: Icon(Icons.shuffle_rounded),
           ),
         ],
       ),
@@ -126,7 +126,27 @@ class _BrowsePageState extends State<BrowsePage> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(hintText: 'Search...'),
+                    decoration: InputDecoration(
+                      hintText: 'Search ${_searchType == 'team' ? 'teams' : 'players'}...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _controller.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _controller.clear();
+                              setState(() {
+                                _allTeams = [];
+                                _allPlayers = [];
+                              });
+                            },
+                          )
+                        : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onSubmitted: (_) => _search(),
                   ),
                 ),
                 const SizedBox(width: 8),
