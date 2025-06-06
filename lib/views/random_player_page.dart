@@ -17,6 +17,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
   Player? _currentPlayer;
   bool _isLoading = false;
   bool _isShakeEnabled = true;
+  bool _hasResult = false; // Track if we have a result
 
   late AnimationController _shakeAnimationController;
   late AnimationController _fadeAnimationController;
@@ -56,13 +57,18 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
   }
 
   void _startShakeDetection() {
-    if (_isShakeEnabled) {
+    if (_isShakeEnabled && !_hasResult) {
       _shakeDetector.startListening(onShakeDetected: _onShakeDetected);
     }
   }
 
+  void _stopShakeDetection() {
+    _shakeDetector.stopListening();
+  }
+
   void _onShakeDetected() {
-    if (!_isLoading) {
+    // Only respond to shake if we don't have a result and not currently loading
+    if (!_isLoading && !_hasResult) {
       // Haptic feedback
       HapticFeedback.mediumImpact();
 
@@ -81,6 +87,9 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
       _isLoading = true;
     });
 
+    // Stop shake detection while loading
+    _stopShakeDetection();
+
     // Fade out current player if exists
     if (_currentPlayer != null) {
       await _fadeAnimationController.reverse();
@@ -92,12 +101,16 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
         setState(() {
           _currentPlayer = player;
           _isLoading = false;
+          _hasResult = player != null; // Set result status
         });
 
         if (player != null) {
           _fadeAnimationController.forward();
+          // Don't restart shake detection here - user needs to manually shake again
         } else {
           _showErrorSnackBar('No player found. Try again!');
+          // Restart shake detection if no result found
+          _startShakeDetection();
         }
       }
     } catch (e) {
@@ -106,8 +119,20 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
           _isLoading = false;
         });
         _showErrorSnackBar('Failed to load random player');
+        // Restart shake detection on error
+        _startShakeDetection();
       }
     }
+  }
+
+  void _resetSearch() {
+    setState(() {
+      _currentPlayer = null;
+      _hasResult = false;
+    });
+    _fadeAnimationController.reset();
+    // Restart shake detection after reset
+    _startShakeDetection();
   }
 
   void _showErrorSnackBar(String message) {
@@ -126,12 +151,13 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
     });
 
     if (_isShakeEnabled) {
-      _shakeDetector.startListening(onShakeDetected: _onShakeDetected);
+      // Only start listening if we don't have a result
+      if (!_hasResult) {
+        _shakeDetector.startListening(onShakeDetected: _onShakeDetected);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Shake detection enabled - shake your device to get a random player',
-          ),
+          content: Text('Shake detection enabled'),
           duration: Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
         ),
@@ -209,13 +235,9 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                       child: Row(
                         children: [
                           Icon(
-                            _isShakeEnabled
-                                ? Icons.phone_android
-                                : Icons.phone_android_outlined,
+                            _getInstructionIcon(),
                             size: 32,
-                            color: _isShakeEnabled
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey,
+                            color: _getInstructionColor(),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -223,22 +245,16 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _isShakeEnabled
-                                      ? 'Shake Detection Active!'
-                                      : 'Shake Detection Disabled',
+                                  _getInstructionTitle(),
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: _isShakeEnabled
-                                        ? Theme.of(context).primaryColor
-                                        : Colors.grey,
+                                    color: _getInstructionColor(),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _isShakeEnabled
-                                      ? 'Shake your device to discover random football players'
-                                      : 'Enable shake detection or use the button below',
+                                  _getInstructionSubtitle(),
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[600],
@@ -273,9 +289,31 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                       ),
                     )
                   else if (_currentPlayer != null)
-                    FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: _buildPlayerCard(_currentPlayer!),
+                    Column(
+                      children: [
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: _buildPlayerCard(_currentPlayer!),
+                        ),
+                        const SizedBox(height: 16),
+                        // Reset button when we have a result
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _resetSearch,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Search Again'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     )
                   else
                     Container(
@@ -291,9 +329,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              _isShakeEnabled
-                                  ? 'Shake your device to start!'
-                                  : 'Tap the button below to start!',
+                              _getEmptyStateMessage(),
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey[600],
@@ -303,7 +339,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                             if (!_isShakeEnabled) ...[
                               const SizedBox(height: 8),
                               Text(
-                                'Or enable shake detection above',
+                                'Enable shake detection above to use shake gesture',
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey[500],
@@ -316,34 +352,33 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                       ),
                     ),
 
-                  const SizedBox(height: 24),
-
-                  // Manual Refresh Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _getRandomPlayer,
-                      icon: const Icon(Icons.shuffle),
-                      label: const Text('Get Random Player'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  // Manual button only shown when no result or shake disabled
+                  if (!_hasResult) ...[
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _getRandomPlayer,
+                        icon: const Icon(Icons.shuffle),
+                        label: const Text('Get Random Player'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
 
                   const SizedBox(height: 12),
 
                   // Status Text
                   Text(
-                    _isShakeEnabled
-                        ? 'Shake detection is active'
-                        : 'Shake detection is disabled',
+                    _getStatusText(),
                     style: TextStyle(
                       fontSize: 12,
-                      color: _isShakeEnabled ? Colors.green : Colors.grey,
+                      color: _getStatusColor(),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -354,6 +389,50 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
         },
       ),
     );
+  }
+
+  // Helper methods for dynamic UI content
+  IconData _getInstructionIcon() {
+    if (!_isShakeEnabled) return Icons.phone_android_outlined;
+    if (_hasResult) return Icons.check_circle;
+    return Icons.phone_android;
+  }
+
+  Color _getInstructionColor() {
+    if (!_isShakeEnabled) return Colors.grey;
+    if (_hasResult) return Colors.green;
+    return Theme.of(context).primaryColor;
+  }
+
+  String _getInstructionTitle() {
+    if (!_isShakeEnabled) return 'Shake Detection Disabled';
+    if (_hasResult) return 'Player Found!';
+    return 'Shake Detection Active!';
+  }
+
+  String _getInstructionSubtitle() {
+    if (!_isShakeEnabled)
+      return 'Enable shake detection or use the button below';
+    if (_hasResult)
+      return 'Shake again to find another player or tap "Search Again"';
+    return 'Shake your device to discover random football players';
+  }
+
+  String _getEmptyStateMessage() {
+    if (!_isShakeEnabled) return 'Tap the button below to start!';
+    return 'Shake your device to start!';
+  }
+
+  String _getStatusText() {
+    if (!_isShakeEnabled) return 'Shake detection is disabled';
+    if (_hasResult) return 'Shake again to search for another player';
+    return 'Shake detection is active - waiting for shake...';
+  }
+
+  Color _getStatusColor() {
+    if (!_isShakeEnabled) return Colors.grey;
+    if (_hasResult) return Colors.orange;
+    return Colors.green;
   }
 
   Widget _buildPlayerCard(Player player) {
