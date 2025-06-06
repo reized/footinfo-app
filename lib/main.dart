@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:footinfo_app/views/login_page.dart';
 import 'package:footinfo_app/views/main_page.dart';
+import 'package:footinfo_app/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize notification service
+  await NotificationService.initialize();
+
   runApp(const MyApp());
 }
 
