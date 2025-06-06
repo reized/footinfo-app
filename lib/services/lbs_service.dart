@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:geocoding/geocoding.dart';
 import '../models/team.dart';
 
 class LBSService {
@@ -252,6 +253,54 @@ class LBSService {
     return await Geolocator.openAppSettings();
   }
 
+  /// Get detailed address from coordinates
+  static Future<String> getDetailedAddress(Position position) async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return 'Location services are disabled';
+      }
+
+      // Check location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return 'Location permissions are denied';
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return 'Location permissions are permanently denied';
+      }
+
+      // Get address details
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        // Build address string, only including non-empty components
+        List<String> addressParts = [
+          place.subLocality ?? '',
+          place.locality ?? '',
+          place.subAdministrativeArea ?? '',
+          place.administrativeArea ?? '',
+          place.country ?? ''
+        ].where((part) => part.isNotEmpty).toList();
+
+        return addressParts.join(', ');
+      }
+      return 'Address not found';
+    } catch (e) {
+      print('Error getting detailed address: $e');
+      return 'Error getting address: ${e.toString()}';
+    }
+  }
+
   /// Get detailed location info
   static Future<Map<String, dynamic>> getLocationInfo() async {
     try {
@@ -265,6 +314,7 @@ class LBSService {
           'longitude': null,
           'accuracy': null,
           'locationName': 'Unknown',
+          'detailedAddress': 'Unknown',
         };
       }
 
@@ -273,12 +323,15 @@ class LBSService {
         position.longitude
       );
 
+      String detailedAddress = await getDetailedAddress(position);
+
       return {
         'status': 'success',
         'latitude': position.latitude,
         'longitude': position.longitude,
         'accuracy': position.accuracy,
         'locationName': locationName,
+        'detailedAddress': detailedAddress,
         'timestamp': position.timestamp,
       };
     } catch (e) {
@@ -289,6 +342,7 @@ class LBSService {
         'longitude': null,
         'accuracy': null,
         'locationName': 'Unknown',
+        'detailedAddress': 'Unknown',
       };
     }
   }

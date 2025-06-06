@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:footinfo_app/views/favorite_page.dart';
 import 'package:footinfo_app/views/browse_page.dart';
+import 'package:footinfo_app/views/feedback_page.dart';
 import 'package:footinfo_app/views/home_page.dart';
 import 'package:footinfo_app/views/profile_page.dart';
 
@@ -19,6 +20,7 @@ class _MainPageState extends State<MainPage> {
     const HomePage(),
     const BrowsePage(),
     const FavoritePage(),
+    const FeedbackPage(),
     const ProfilePage(),
   ];
 
@@ -48,9 +50,14 @@ class _MainPageState extends State<MainPage> {
             label: 'Browse',
           ),
           NavigationDestination(
-            icon: Icon(Icons.mail_outline_rounded),
-            selectedIcon: Icon(Icons.mail_rounded),
-            label: 'Notes',
+            icon: Icon(Icons.star_outline_rounded),
+            selectedIcon: Icon(Icons.star_rounded),
+            label: 'Favorites',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.feedback_outlined),
+            selectedIcon: Icon(Icons.feedback_rounded),
+            label: 'Feedback',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

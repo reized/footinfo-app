@@ -99,7 +99,7 @@ class _HomePageState extends State<HomePage>
       if (mounted) {
         setState(() {
           if (locationInfo['status'] == 'success') {
-            _userLocation = locationInfo['locationName'];
+            _userLocation = locationInfo['detailedAddress'];
           } else {
             _userLocation = locationInfo['message'] ?? 'Unable to get location';
           }
@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage>
           child: Row(
             children: [
               // Time
-              Container(
+              SizedBox(
                 width: 50,
                 child: Column(
                   children: [
@@ -337,21 +337,13 @@ class _HomePageState extends State<HomePage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_getGreeting()}!',
+                      _currentUser != null
+                          ? '${_getGreeting()}, ${_currentUser!.username}!'
+                          : '${_getGreeting()}!',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _currentUser != null
-                          ? 'Welcome back, ${_currentUser!.username}'
-                          : 'Welcome to Footinfo',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -433,20 +425,19 @@ class _HomePageState extends State<HomePage>
 
               // Location Display
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Your location: ',
+                      'Your location:',
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
+                    const SizedBox(height: 4),
                     if (_isLoadingLocation)
                       const SizedBox(
                         width: 12,
@@ -460,6 +451,7 @@ class _HomePageState extends State<HomePage>
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
+                        softWrap: true,
                       ),
                   ],
                 ),

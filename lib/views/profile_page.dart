@@ -28,9 +28,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (userId != null) {
       final userService = UserService();
       final user = await userService.getUserById(userId);
-      setState(() {
-        _user = user;
-      });
+      if (mounted) {
+        setState(() {
+          _user = user;
+        });
+      }
     }
   }
 
