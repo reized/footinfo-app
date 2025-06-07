@@ -1,4 +1,5 @@
 import 'package:footinfo_app/models/user.dart';
+import 'package:footinfo_app/services/encryption_service.dart';
 import 'database_helper.dart';
 
 class UserService {
@@ -6,7 +7,17 @@ class UserService {
 
   Future<int> insertUser(UserModel user) async {
     final db = await dbHelper.database;
-    return await db.insert('users', user.toMap());
+
+    // Enkripsi password sebelum menyimpan ke database
+    final encryptedUser = UserModel(
+      id: user.id,
+      username: user.username,
+      password: EncryptionService.hashPassword(user.password),
+      bio: user.bio,
+      imgPath: user.imgPath,
+    );
+
+    return await db.insert('users', encryptedUser.toMap());
   }
 
   Future<UserModel?> getUserById(int id) async {
@@ -24,12 +35,23 @@ class UserService {
 
   Future<UserModel?> getUser(String username, String password) async {
     final db = await dbHelper.database;
+
+    // Ambil user berdasarkan username saja
     final res = await db.query(
       'users',
-      where: 'username = ? AND password = ?',
-      whereArgs: [username, password],
+      where: 'username = ?',
+      whereArgs: [username],
     );
-    if (res.isNotEmpty) return UserModel.fromMap(res.first);
+
+    if (res.isNotEmpty) {
+      final user = UserModel.fromMap(res.first);
+
+      // Verifikasi password menggunakan hash
+      if (EncryptionService.verifyPassword(password, user.password)) {
+        return user;
+      }
+    }
+
     return null;
   }
 
@@ -41,9 +63,21 @@ class UserService {
 
   Future<int> updateUser(UserModel user) async {
     final db = await dbHelper.database;
+
+    // Jika password diubah, enkripsi terlebih dahulu
+    final updatedUser = UserModel(
+      id: user.id,
+      username: user.username,
+      password: user.password.length == 64
+          ? user.password
+          : EncryptionService.hashPassword(user.password),
+      bio: user.bio,
+      imgPath: user.imgPath,
+    );
+
     return await db.update(
       'users',
-      user.toMap(),
+      updatedUser.toMap(),
       where: 'id = ?',
       whereArgs: [user.id],
     );
@@ -51,10 +85,33 @@ class UserService {
 
   Future<int> deleteUser(int id) async {
     final db = await dbHelper.database;
-    return await db.delete(
-      'users',
-      where: 'id = ?',
-      whereArgs: [id],
+    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Method untuk mengubah password user
+  Future<bool> changePassword(
+    int userId,
+    String oldPassword,
+    String newPassword,
+  ) async {
+    final user = await getUserById(userId);
+    if (user == null) return false;
+
+    // Verifikasi password lama
+    if (!EncryptionService.verifyPassword(oldPassword, user.password)) {
+      return false;
+    }
+
+    // Update dengan password baru yang dienkripsi
+    final updatedUser = UserModel(
+      id: user.id,
+      username: user.username,
+      password: EncryptionService.hashPassword(newPassword),
+      bio: user.bio,
+      imgPath: user.imgPath,
     );
+
+    final result = await updateUser(updatedUser);
+    return result > 0;
   }
 }
