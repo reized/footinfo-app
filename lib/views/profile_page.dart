@@ -166,6 +166,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         title: const Text('Edit Profile'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: _editProfile,
+                        
                       ),
                     ),
                   ),
