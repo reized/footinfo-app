@@ -13,7 +13,6 @@ class TeamDetailPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header with team logo and background
             Container(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -46,7 +45,6 @@ class TeamDetailPage extends StatelessWidget {
               ),
             ),
 
-            // Team Info Cards
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

@@ -26,7 +26,6 @@ class Fixture {
     final teams = json['teams'];
     final venue = json['venue'] ?? {};
 
-    // Parse date & time
     DateTime dateTime = DateTime.parse(fixture['date']);
     String formattedTime =
         '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';

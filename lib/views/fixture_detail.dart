@@ -23,7 +23,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
     _loadNotificationState();
   }
 
-  // Load notification state from SharedPreferences
   Future<void> _loadNotificationState() async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'notification_${widget.fixture.id}';
@@ -32,7 +31,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
     });
   }
 
-  // Save notification state to SharedPreferences
   Future<void> _saveNotificationState(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'notification_${widget.fixture.id}';
@@ -45,7 +43,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
     });
 
     try {
-      // Request permission first
       final hasPermission = await NotificationService.requestPermissions();
 
       if (!hasPermission) {
@@ -76,17 +73,13 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
       final newState = !_isNotificationEnabled;
 
       if (newState) {
-        // Enable notification
-
-        // Show immediate confirmation notification
         await NotificationService.showInstantNotification(
-          id: 999, // Use different ID for instant notification
+          id: 999,
           title: '✅ Reminder Enabled!',
           body:
               'You will be notified 1 hour before ${widget.fixture.homeTeamName} vs ${widget.fixture.awayTeamName}',
         );
 
-        // Schedule the actual match reminder
         await NotificationService.scheduleMatchReminder(widget.fixture);
 
         if (mounted) {
@@ -113,7 +106,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
           );
         }
       } else {
-        // Disable notification
         await NotificationService.cancelNotification(widget.fixture.id);
 
         if (mounted) {
@@ -137,7 +129,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
         }
       }
 
-      // Update state and save to preferences
       setState(() {
         _isNotificationEnabled = newState;
       });
@@ -173,13 +164,10 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
     try {
       DateTime utcTime = DateTime.parse(widget.fixture.date);
 
-      // Convert to different time zones
-      DateTime wibTime = utcTime.add(Duration(hours: 7)); // UTC+7
-      DateTime witaTime = utcTime.add(Duration(hours: 8)); // UTC+8
-      DateTime witTime = utcTime.add(Duration(hours: 9)); // UTC+9
-      DateTime londonTime = utcTime.add(
-        Duration(hours: 1),
-      ); // UTC+1 (GMT+1 for summer time)
+      DateTime wibTime = utcTime.add(Duration(hours: 7));
+      DateTime witaTime = utcTime.add(Duration(hours: 8));
+      DateTime witTime = utcTime.add(Duration(hours: 9));
+      DateTime londonTime = utcTime.add(Duration(hours: 1));
 
       String formatTime(DateTime time) {
         return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
@@ -395,7 +383,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Teams Section with Purple Background
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -426,7 +413,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                         true,
                       ),
 
-                      // VS Section
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(
@@ -463,7 +449,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
             const SizedBox(height: 24),
 
-            // Match Time and Venue Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -481,7 +466,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Date
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -503,7 +487,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
                   const SizedBox(height: 16),
 
-                  // Time with Time Zone Toggle
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -551,7 +534,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
                   const SizedBox(height: 16),
 
-                  // Status
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -573,7 +555,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
                   const SizedBox(height: 16),
 
-                  // Venue at the bottom
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -617,7 +598,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
               ),
             ),
 
-            // Time Zones Section (Expandable)
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               height: _showTimeZones ? null : 0,
@@ -657,7 +637,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Indonesian Time Zones
                           Row(
                             children: [
                               Expanded(
@@ -741,7 +720,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
             const SizedBox(height: 24),
 
-            // Notification Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -770,7 +748,6 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Notification Toggle
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey[50],

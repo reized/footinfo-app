@@ -8,7 +8,6 @@ class UserService {
   Future<int> insertUser(UserModel user) async {
     final db = await dbHelper.database;
 
-    // Enkripsi password sebelum menyimpan ke database
     final encryptedUser = UserModel(
       id: user.id,
       username: user.username,
@@ -36,7 +35,6 @@ class UserService {
   Future<UserModel?> getUser(String username, String password) async {
     final db = await dbHelper.database;
 
-    // Ambil user berdasarkan username saja
     final res = await db.query(
       'users',
       where: 'username = ?',
@@ -46,7 +44,6 @@ class UserService {
     if (res.isNotEmpty) {
       final user = UserModel.fromMap(res.first);
 
-      // Verifikasi password menggunakan hash
       if (EncryptionService.verifyPassword(password, user.password)) {
         return user;
       }
@@ -64,7 +61,6 @@ class UserService {
   Future<int> updateUser(UserModel user) async {
     final db = await dbHelper.database;
 
-    // Jika password diubah, enkripsi terlebih dahulu
     final updatedUser = UserModel(
       id: user.id,
       username: user.username,
@@ -88,7 +84,6 @@ class UserService {
     return await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Method untuk mengubah password user
   Future<bool> changePassword(
     int userId,
     String oldPassword,
@@ -97,12 +92,10 @@ class UserService {
     final user = await getUserById(userId);
     if (user == null) return false;
 
-    // Verifikasi password lama
     if (!EncryptionService.verifyPassword(oldPassword, user.password)) {
       return false;
     }
 
-    // Update dengan password baru yang dienkripsi
     final updatedUser = UserModel(
       id: user.id,
       username: user.username,
