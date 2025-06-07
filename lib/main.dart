@@ -8,15 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize environment configuration first
   await ApiConfig.initialize();
-  
-  // Validate configuration
+
   if (!ApiConfig.validateConfig()) {
     print('Warning: Environment configuration is incomplete!');
   }
 
-  // Initialize notification service
   await NotificationService.initialize();
 
   runApp(const MyApp());
@@ -34,7 +31,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: ApiConfig.appName, // Menggunakan config dari .env
+      title: ApiConfig.appName,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
       ),

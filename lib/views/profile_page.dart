@@ -73,8 +73,14 @@ class _ProfilePageState extends State<ProfilePage> {
         title: const Text('Hapus Akun'),
         content: const Text('Yakin ingin menghapus akun?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Hapus')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
         ],
       ),
     );
@@ -110,16 +116,12 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Profile'), elevation: 0),
       body: _user == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Column(
                 children: [
-                  // Header dengan foto profil
                   Container(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -127,11 +129,19 @@ class _ProfilePageState extends State<ProfilePage> {
                         CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage: (_user!.imgPath != null && _user!.imgPath!.isNotEmpty)
+                          backgroundImage:
+                              (_user!.imgPath != null &&
+                                  _user!.imgPath!.isNotEmpty)
                               ? FileImage(File(_user!.imgPath!))
                               : null,
-                          child: (_user!.imgPath == null || _user!.imgPath!.isEmpty)
-                              ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          child:
+                              (_user!.imgPath == null ||
+                                  _user!.imgPath!.isEmpty)
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.grey,
+                                )
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -157,7 +167,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
 
-                  // tombol edit profile
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Card(
@@ -166,14 +175,12 @@ class _ProfilePageState extends State<ProfilePage> {
                         title: const Text('Edit Profile'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: _editProfile,
-                        
                       ),
                     ),
                   ),
 
                   const Divider(),
 
-                  // pengaturan akun
                   Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -187,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // tombol hapus akun
+
                         ElevatedButton.icon(
                           onPressed: _deleteAccount,
                           icon: const Icon(Icons.delete_forever),
@@ -199,7 +206,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // tombol logout
+
                         OutlinedButton.icon(
                           onPressed: _logout,
                           icon: const Icon(Icons.logout),

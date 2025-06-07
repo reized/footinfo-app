@@ -63,8 +63,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage:
-                    _imagePath != null ? FileImage(File(_imagePath!)) : null,
+                backgroundImage: _imagePath != null
+                    ? FileImage(File(_imagePath!))
+                    : null,
                 child: _imagePath == null ? const Icon(Icons.camera_alt) : null,
               ),
             ),
@@ -83,7 +84,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ElevatedButton(
               onPressed: _saveProfile,
               child: const Text('Save Changes'),
-            )
+            ),
           ],
         ),
       ),

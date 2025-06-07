@@ -20,9 +20,9 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login(BuildContext context) async {
     if (usernameController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
@@ -33,12 +33,12 @@ class _LoginPageState extends State<LoginPage> {
         usernameController.text,
         passwordController.text,
       );
-      
+
       if (user != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setInt('userId', user.id!);
-        
+
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -66,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo and App Name
                 Icon(
                   Icons.sports_soccer,
                   size: 80,
@@ -86,14 +85,10 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   'Welcome back!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 32),
 
-                // Login Form
                 TextField(
                   controller: usernameController,
                   decoration: InputDecoration(
@@ -113,9 +108,12 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -123,8 +121,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
-                // Login Button
+
                 ElevatedButton(
                   onPressed: _isLoading ? null : () => _login(context),
                   style: ElevatedButton.styleFrom(
@@ -141,17 +138,15 @@ class _LoginPageState extends State<LoginPage> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
-                      : const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                      : const Text('Login', style: TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(height: 16),
-                
-                // Register Link
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

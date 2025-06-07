@@ -161,7 +161,6 @@ class _HomePageState extends State<HomePage>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Time
               SizedBox(
                 width: 50,
                 child: Column(
@@ -183,11 +182,9 @@ class _HomePageState extends State<HomePage>
 
               const SizedBox(width: 16),
 
-              // Teams
               Expanded(
                 child: Row(
                   children: [
-                    // Home Team
                     Expanded(
                       child: Row(
                         children: [
@@ -231,7 +228,6 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
 
-                    // VS
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
@@ -244,7 +240,6 @@ class _HomePageState extends State<HomePage>
                       ),
                     ),
 
-                    // Away Team
                     Expanded(
                       child: Row(
                         children: [
@@ -318,7 +313,6 @@ class _HomePageState extends State<HomePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting Section
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -357,7 +351,6 @@ class _HomePageState extends State<HomePage>
 
               const SizedBox(height: 24),
 
-              // Today's Fixtures Section
               Row(
                 children: [
                   Icon(
@@ -412,7 +405,6 @@ class _HomePageState extends State<HomePage>
 
               const SizedBox(height: 24),
 
-              // Clubs Around You Section
               Row(
                 children: [
                   Icon(
@@ -429,7 +421,6 @@ class _HomePageState extends State<HomePage>
 
               const SizedBox(height: 12),
 
-              // Location Display
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -465,7 +456,6 @@ class _HomePageState extends State<HomePage>
 
               const SizedBox(height: 16),
 
-              // Teams Grid
               if (_isLoadingTeams)
                 const Center(
                   child: Padding(

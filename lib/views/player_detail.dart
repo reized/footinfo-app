@@ -21,7 +21,6 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header with player photo
             Container(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -74,7 +73,6 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
               ),
             ),
 
-            // Market Value Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Card(
@@ -173,7 +171,6 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
 
             const SizedBox(height: 24),
 
-            // Player Info Cards
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(

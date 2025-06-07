@@ -17,7 +17,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
   Player? _currentPlayer;
   bool _isLoading = false;
   bool _isShakeEnabled = true;
-  bool _hasResult = false; // Track if we have a result
+  bool _hasResult = false;
 
   late AnimationController _shakeAnimationController;
   late AnimationController _fadeAnimationController;
@@ -34,7 +34,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
   }
 
   void _initializeAnimations() {
-    // Shake animation for visual feedback
     _shakeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -46,7 +45,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
       ),
     );
 
-    // Fade animation for player card
     _fadeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -67,17 +65,13 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
   }
 
   void _onShakeDetected() {
-    // Only respond to shake if we don't have a result and not currently loading
     if (!_isLoading && !_hasResult) {
-      // Haptic feedback
       HapticFeedback.mediumImpact();
 
-      // Visual feedback
       _shakeAnimationController.forward().then((_) {
         _shakeAnimationController.reverse();
       });
 
-      // Get new random player
       _getRandomPlayer();
     }
   }
@@ -87,10 +81,8 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
       _isLoading = true;
     });
 
-    // Stop shake detection while loading
     _stopShakeDetection();
 
-    // Fade out current player if exists
     if (_currentPlayer != null) {
       await _fadeAnimationController.reverse();
     }
@@ -101,15 +93,14 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
         setState(() {
           _currentPlayer = player;
           _isLoading = false;
-          _hasResult = player != null; // Set result status
+          _hasResult = player != null;
         });
 
         if (player != null) {
           _fadeAnimationController.forward();
-          // Don't restart shake detection here - user needs to manually shake again
         } else {
           _showErrorSnackBar('No player found. Try again!');
-          // Restart shake detection if no result found
+
           _startShakeDetection();
         }
       }
@@ -119,7 +110,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
           _isLoading = false;
         });
         _showErrorSnackBar('Failed to load random player');
-        // Restart shake detection on error
+
         _startShakeDetection();
       }
     }
@@ -131,7 +122,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
       _hasResult = false;
     });
     _fadeAnimationController.reset();
-    // Restart shake detection after reset
+
     _startShakeDetection();
   }
 
@@ -151,7 +142,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
     });
 
     if (_isShakeEnabled) {
-      // Only start listening if we don't have a result
       if (!_hasResult) {
         _shakeDetector.startListening(onShakeDetected: _onShakeDetected);
       }
@@ -213,7 +203,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Instructions Card
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -270,7 +259,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
                   const SizedBox(height: 24),
 
-                  // Loading or Player Card
                   if (_isLoading)
                     Container(
                       height: 400,
@@ -296,7 +284,7 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                           child: _buildPlayerCard(_currentPlayer!),
                         ),
                         const SizedBox(height: 16),
-                        // Reset button when we have a result
+
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -352,7 +340,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
                       ),
                     ),
 
-                  // Manual button only shown when no result or shake disabled
                   if (!_hasResult) ...[
                     const SizedBox(height: 24),
                     SizedBox(
@@ -373,7 +360,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
                   const SizedBox(height: 12),
 
-                  // Status Text
                   Text(
                     _getStatusText(),
                     style: TextStyle(
@@ -391,7 +377,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
     );
   }
 
-  // Helper methods for dynamic UI content
   IconData _getInstructionIcon() {
     if (!_isShakeEnabled) return Icons.phone_android_outlined;
     if (_hasResult) return Icons.check_circle;
@@ -451,7 +436,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              // Player Photo
               Hero(
                 tag: 'player-${player.id}-random',
                 child: CircleAvatar(
@@ -485,7 +469,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
               const SizedBox(height: 16),
 
-              // Player Name
               Text(
                 player.name,
                 style: const TextStyle(
@@ -497,7 +480,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
               const SizedBox(height: 8),
 
-              // Player Position
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -519,7 +501,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
               const SizedBox(height: 16),
 
-              // Quick Info
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -530,7 +511,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
               const SizedBox(height: 16),
 
-              // Market Value
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -559,7 +539,6 @@ class _RandomPlayerPageState extends State<RandomPlayerPage>
 
               const SizedBox(height: 16),
 
-              // Tap to view details
               Text(
                 'Tap to view full details',
                 style: TextStyle(

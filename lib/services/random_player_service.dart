@@ -5,22 +5,19 @@ import 'dart:math';
 import '../models/player.dart';
 
 class RandomPlayerService {
-  // Menggunakan konfigurasi dari .env
   static String get _baseUrl => ApiConfig.footballApiBaseUrl;
   static String get _apiKey => ApiConfig.footballApiKey;
 
-  // Range of player IDs - disesuaikan dengan database API
   static const int _minPlayerId = 1;
-  static const int _maxPlayerId = 50000; // Increased range for more randomness
+  static const int _maxPlayerId = 50000;
 
-  // Maximum retry attempts to prevent infinite loops
   static const int _maxRetryAttempts = 10;
 
-  /// Get random player from API with improved randomness
   static Future<Player?> getRandomPlayer() async {
-    // Validasi konfigurasi sebelum melakukan request
     if (!ApiConfig.validateConfig()) {
-      print('Error: API configuration is incomplete. Please check your .env file.');
+      print(
+        'Error: API configuration is incomplete. Please check your .env file.',
+      );
       return null;
     }
 
@@ -29,13 +26,14 @@ class RandomPlayerService {
 
     while (attempts < _maxRetryAttempts) {
       attempts++;
-      late final int randomId; // Deklarasi di luar try
+      late final int randomId;
 
       try {
-        // Generate random ID
         randomId = _minPlayerId + random.nextInt(_maxPlayerId - _minPlayerId);
 
-        print('Attempting to fetch player with ID: $randomId (Attempt $attempts)');
+        print(
+          'Attempting to fetch player with ID: $randomId (Attempt $attempts)',
+        );
 
         final response = await http.get(
           Uri.parse('$_baseUrl/players?id=$randomId&season=2023'),
@@ -47,10 +45,8 @@ class RandomPlayerService {
           final List<dynamic> playersData = data['response'];
 
           if (playersData.isNotEmpty) {
-            // Get the first player from the response
             final playerData = playersData[0];
 
-            // Validate that player has required data
             if (_isValidPlayerData(playerData)) {
               print(
                 'Successfully found player: ${playerData['player']['name']}',
@@ -66,7 +62,6 @@ class RandomPlayerService {
           print('API error: ${response.statusCode}, trying another ID...');
         }
 
-        // Add small delay between attempts to avoid rate limiting
         await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
         print('Error fetching player with ID $randomId: $e');
@@ -77,12 +72,10 @@ class RandomPlayerService {
     return null;
   }
 
-  /// Validate if player data has required fields
   static bool _isValidPlayerData(Map<String, dynamic> playerData) {
     try {
       final player = playerData['player'];
 
-      // Check if essential fields exist and are not null/empty
       return player != null &&
           player['id'] != null &&
           player['name'] != null &&
@@ -94,15 +87,15 @@ class RandomPlayerService {
     }
   }
 
-  /// Get random player from a specific league (optional method)
   static Future<Player?> getRandomPlayerFromLeague(
     int leagueId, {
     int season = 2023,
   }) async {
     try {
-      // Validasi konfigurasi sebelum melakukan request
       if (!ApiConfig.validateConfig()) {
-        print('Error: API configuration is incomplete. Please check your .env file.');
+        print(
+          'Error: API configuration is incomplete. Please check your .env file.',
+        );
         return null;
       }
 
@@ -116,7 +109,6 @@ class RandomPlayerService {
         final List<dynamic> playersData = data['response'];
 
         if (playersData.isNotEmpty) {
-          // Get random player from the list
           final random = Random();
           final randomIndex = random.nextInt(playersData.length);
           return Player.fromJson(playersData[randomIndex]);
@@ -130,10 +122,9 @@ class RandomPlayerService {
     }
   }
 
-  /// Get multiple random players (optional method)
   static Future<List<Player>> getMultipleRandomPlayers(int count) async {
     List<Player> players = [];
-    Set<int> usedIds = {}; // To avoid duplicates
+    Set<int> usedIds = {};
 
     for (int i = 0; i < count; i++) {
       int attempts = 0;
@@ -149,7 +140,6 @@ class RandomPlayerService {
         attempts++;
       }
 
-      // Add delay between requests
       await Future.delayed(const Duration(milliseconds: 200));
     }
 

@@ -21,7 +21,6 @@ class Player {
     required this.height,
     required this.weight,
   }) {
-    // Generate random market value when player is created
     marketValueUSD = CurrencyService.generateRandomMarketValue();
   }
 
@@ -39,12 +38,10 @@ class Player {
     );
   }
 
-  // Get market value in specific currency
   double getMarketValue(String currency) {
     return CurrencyService.convertCurrency(marketValueUSD, 'USD', currency);
   }
 
-  // Get formatted market value in specific currency
   String getFormattedMarketValue(String currency) {
     final value = getMarketValue(currency);
     return CurrencyService.formatCurrency(value, currency);

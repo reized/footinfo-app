@@ -57,7 +57,6 @@ class _BrowsePageState extends State<BrowsePage> {
     final keyword = _controller.text.trim();
     if (keyword.isEmpty) return;
 
-    // Validasi konfigurasi sebelum melakukan request
     if (!ApiConfig.validateConfig()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -173,7 +172,6 @@ class _BrowsePageState extends State<BrowsePage> {
 
             const SizedBox(height: 12),
 
-            // Filter pill
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -213,10 +211,8 @@ class _BrowsePageState extends State<BrowsePage> {
 
             const SizedBox(height: 16),
 
-            // Loading
             if (_isLoading) const CircularProgressIndicator(),
 
-            // Results
             Expanded(
               child: _searchType == 'team'
                   ? ListView.builder(
