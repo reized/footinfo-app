@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:footinfo_app/config/api_config.dart';
 import 'package:footinfo_app/models/player.dart';
 import 'package:footinfo_app/models/team.dart';
 import 'package:footinfo_app/views/player_detail.dart';
@@ -56,6 +57,18 @@ class _BrowsePageState extends State<BrowsePage> {
     final keyword = _controller.text.trim();
     if (keyword.isEmpty) return;
 
+    // Validasi konfigurasi sebelum melakukan request
+    if (!ApiConfig.validateConfig()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'API configuration is incomplete. Please check your .env file.',
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       if (isNewSearch) {
@@ -66,14 +79,14 @@ class _BrowsePageState extends State<BrowsePage> {
     });
 
     final url = _searchType == 'team'
-        ? 'https://v3.football.api-sports.io/teams?search=$keyword'
-        : 'https://v3.football.api-sports.io/players/profiles?search=$keyword';
+        ? '${ApiConfig.footballApiBaseUrl}/teams?search=$keyword'
+        : '${ApiConfig.footballApiBaseUrl}/players/profiles?search=$keyword';
 
     final response = await http.get(
       Uri.parse(url),
       headers: {
-        'x-apisports-host': 'v3.football.api-sports.io',
-        'x-apisports-key': '86ab1cfe67a66269855aa7f7d32ce1e7',
+        'x-apisports-host': ApiConfig.footballApiHost,
+        'x-apisports-key': ApiConfig.footballApiKey,
       },
     );
 
@@ -127,20 +140,21 @@ class _BrowsePageState extends State<BrowsePage> {
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
-                      hintText: 'Search ${_searchType == 'team' ? 'teams' : 'players'}...',
+                      hintText:
+                          'Search ${_searchType == 'team' ? 'teams' : 'players'}...',
                       prefixIcon: const Icon(Icons.search),
                       suffixIcon: _controller.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _controller.clear();
-                              setState(() {
-                                _allTeams = [];
-                                _allPlayers = [];
-                              });
-                            },
-                          )
-                        : null,
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _controller.clear();
+                                setState(() {
+                                  _allTeams = [];
+                                  _allPlayers = [];
+                                });
+                              },
+                            )
+                          : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

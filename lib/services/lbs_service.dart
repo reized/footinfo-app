@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:footinfo_app/config/api_config.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:geocoding/geocoding.dart';
@@ -25,8 +26,9 @@ class LBSService {
     'United States': 'USA',
   };
 
-  static const String _apiKey = '86ab1cfe67a66269855aa7f7d32ce1e7';
-  static const String _apiHost = 'v3.football.api-sports.io';
+  // Menggunakan konfigurasi dari .env
+  static String get _apiKey => ApiConfig.footballApiKey;
+  static String get _apiHost => ApiConfig.footballApiHost;
 
   /// Check if location services are enabled
   static Future<bool> isLocationServiceEnabled() async {
@@ -168,6 +170,11 @@ class LBSService {
   /// Fetch teams by country
   static Future<List<Team>> fetchTeamsByCountry(String country, {int limit = 10}) async {
     try {
+      // Validasi konfigurasi sebelum melakukan request
+      if (!ApiConfig.validateConfig()) {
+        throw Exception('API configuration is incomplete. Please check your .env file.');
+      }
+
       String mappedCountry = _countryMapping[country] ?? country;
       
       final response = await http.get(
