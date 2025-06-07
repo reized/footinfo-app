@@ -16,16 +16,24 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
   bool _isNotificationEnabled = false;
   bool _showTimeZones = false;
   bool _isLoading = false;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _loadCurrentUser();
     _loadNotificationState();
   }
 
-  Future<void> _loadNotificationState() async {
+  Future<void> _loadCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final key = 'notification_${widget.fixture.id}';
+    _currentUserId = prefs.getString('user_id') ?? 'guest';
+  }
+
+  Future<void> _loadNotificationState() async {
+    await _loadCurrentUser();
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'notification_${_currentUserId}_${widget.fixture.id}';
     setState(() {
       _isNotificationEnabled = prefs.getBool(key) ?? false;
     });
@@ -33,8 +41,48 @@ class _FixtureDetailPageState extends State<FixtureDetailPage> {
 
   Future<void> _saveNotificationState(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
-    final key = 'notification_${widget.fixture.id}';
+    final key = 'notification_${_currentUserId}_${widget.fixture.id}';
     await prefs.setBool(key, enabled);
+
+    await _updateUserNotificationList(enabled);
+  }
+
+  Future<void> _updateUserNotificationList(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    final listKey = 'active_notifications_$_currentUserId';
+    List<String> activeNotifications = prefs.getStringList(listKey) ?? [];
+
+    String fixtureKey = widget.fixture.id.toString();
+
+    if (enabled) {
+      if (!activeNotifications.contains(fixtureKey)) {
+        activeNotifications.add(fixtureKey);
+      }
+    } else {
+      activeNotifications.remove(fixtureKey);
+    }
+
+    await prefs.setStringList(listKey, activeNotifications);
+  }
+
+  static Future<List<String>> getUserActiveNotifications(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('active_notifications_$userId') ?? [];
+  }
+
+  static Future<void> clearUserNotifications(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final activeNotifications = await getUserActiveNotifications(userId);
+
+    for (String fixtureId in activeNotifications) {
+      await NotificationService.cancelNotification(int.parse(fixtureId));
+    }
+
+    await prefs.remove('active_notifications_$userId');
+
+    for (String fixtureId in activeNotifications) {
+      await prefs.remove('notification_${userId}_$fixtureId');
+    }
   }
 
   Future<void> _toggleNotification() async {
