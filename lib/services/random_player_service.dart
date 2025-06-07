@@ -1,11 +1,13 @@
+import 'package:footinfo_app/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import '../models/player.dart';
 
 class RandomPlayerService {
-  static const String _baseUrl = 'https://v3.football.api-sports.io';
-  static const String _apiKey = '86ab1cfe67a66269855aa7f7d32ce1e7';
+  // Menggunakan konfigurasi dari .env
+  static String get _baseUrl => ApiConfig.footballApiBaseUrl;
+  static String get _apiKey => ApiConfig.footballApiKey;
 
   // Range of player IDs - disesuaikan dengan database API
   static const int _minPlayerId = 1;
@@ -16,6 +18,12 @@ class RandomPlayerService {
 
   /// Get random player from API with improved randomness
   static Future<Player?> getRandomPlayer() async {
+    // Validasi konfigurasi sebelum melakukan request
+    if (!ApiConfig.validateConfig()) {
+      print('Error: API configuration is incomplete. Please check your .env file.');
+      return null;
+    }
+
     final random = Random();
     int attempts = 0;
 
@@ -92,6 +100,12 @@ class RandomPlayerService {
     int season = 2023,
   }) async {
     try {
+      // Validasi konfigurasi sebelum melakukan request
+      if (!ApiConfig.validateConfig()) {
+        print('Error: API configuration is incomplete. Please check your .env file.');
+        return null;
+      }
+
       final response = await http.get(
         Uri.parse('$_baseUrl/players?league=$leagueId&season=$season'),
         headers: {'x-apisports-key': _apiKey},

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:footinfo_app/config/api_config.dart';
 import 'package:footinfo_app/views/login_page.dart';
 import 'package:footinfo_app/views/main_page.dart';
 import 'package:footinfo_app/services/notification_service.dart';
@@ -6,6 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize environment configuration first
+  await ApiConfig.initialize();
+  
+  // Validate configuration
+  if (!ApiConfig.validateConfig()) {
+    print('Warning: Environment configuration is incomplete!');
+  }
 
   // Initialize notification service
   await NotificationService.initialize();
@@ -25,7 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Footinfo App',
+      title: ApiConfig.appName, // Menggunakan config dari .env
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
       ),

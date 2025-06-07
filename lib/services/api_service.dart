@@ -1,13 +1,20 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/fixture.dart';
+import '../config/api_config.dart';
 
 class ApiService {
-  static const String _baseUrl = 'https://v3.football.api-sports.io';
-  static const String _apiKey = '86ab1cfe67a66269855aa7f7d32ce1e7';
+  // Menggunakan konfigurasi dari .env
+  static String get _baseUrl => ApiConfig.footballApiBaseUrl;
+  static String get _apiKey => ApiConfig.footballApiKey;
 
   static Future<List<Fixture>> getTodayFixtures() async {
     try {
+      // Validasi konfigurasi sebelum melakukan request
+      if (!ApiConfig.validateConfig()) {
+        throw Exception('API configuration is incomplete. Please check your .env file.');
+      }
+
       // Get today's date in YYYY-MM-DD format
       String today = DateTime.now().toIso8601String().split('T')[0];
 
@@ -37,16 +44,26 @@ class ApiService {
   }
 
   static Future<void> fetchTeams(String query) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/teams?search=$query'),
-      headers: {'x-apisports-key': _apiKey},
-    );
+    try {
+      // Validasi konfigurasi sebelum melakukan request
+      if (!ApiConfig.validateConfig()) {
+        throw Exception('API configuration is incomplete. Please check your .env file.');
+      }
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print(data);
-    } else {
-      throw Exception('Gagal memuat data tim');
+      final response = await http.get(
+        Uri.parse('$_baseUrl/teams?search=$query'),
+        headers: {'x-apisports-key': _apiKey},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+      } else {
+        throw Exception('Gagal memuat data tim');
+      }
+    } catch (e) {
+      print('Error fetching teams: $e');
+      rethrow;
     }
   }
 }
