@@ -15,8 +15,8 @@ class FavoritesPage extends StatefulWidget {
 class _FavoritesPageState extends State<FavoritesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<int> _favoritePlayers = [];
-  List<int> _favoriteTeams = [];
+  List<Player> _favoritePlayers = [];
+  List<Team> _favoriteTeams = [];
   bool _isLoading = true;
 
   @override
@@ -38,8 +38,42 @@ class _FavoritesPageState extends State<FavoritesPage>
     });
 
     try {
-      final players = await FavoriteService.getFavoritePlayers();
-      final teams = await FavoriteService.getFavoriteTeams();
+      final playerIds = await FavoriteService.getFavoritePlayers();
+      final teamIds = await FavoriteService.getFavoriteTeams();
+
+      // In a real app, you would fetch the actual data from your API
+      // For now, we'll create mock data based on the IDs
+      List<Player> players = [];
+      List<Team> teams = [];
+
+      // Create mock players from IDs
+      for (int id in playerIds) {
+        players.add(
+          Player(
+            id: id,
+            name: 'Player $id',
+            photo: 'https://via.placeholder.com/100',
+            nationality: 'Unknown',
+            age: '25',
+            position: 'Forward',
+            height: '180cm',
+            weight: '75kg',
+          ),
+        );
+      }
+
+      // Create mock teams from IDs
+      for (int id in teamIds) {
+        teams.add(
+          Team(
+            id: id,
+            name: 'Team $id',
+            logo: 'https://via.placeholder.com/100',
+            country: 'Unknown',
+            venueName: 'Stadium $id',
+          ),
+        );
+      }
 
       setState(() {
         _favoritePlayers = players;
@@ -150,8 +184,8 @@ class _FavoritesPageState extends State<FavoritesPage>
         padding: const EdgeInsets.all(16),
         itemCount: _favoritePlayers.length,
         itemBuilder: (context, index) {
-          final playerId = _favoritePlayers[index];
-          return _buildPlayerCard(playerId);
+          final player = _favoritePlayers[index];
+          return _buildPlayerCard(player);
         },
       ),
     );
@@ -172,8 +206,8 @@ class _FavoritesPageState extends State<FavoritesPage>
         padding: const EdgeInsets.all(16),
         itemCount: _favoriteTeams.length,
         itemBuilder: (context, index) {
-          final teamId = _favoriteTeams[index];
-          return _buildTeamCard(teamId);
+          final team = _favoriteTeams[index];
+          return _buildTeamCard(team);
         },
       ),
     );
@@ -212,19 +246,30 @@ class _FavoritesPageState extends State<FavoritesPage>
     );
   }
 
-  Widget _buildPlayerCard(int playerId) {
-    // Note: In a real app, you would fetch player data from your API or database
-    // For now, we'll show a placeholder card with the player ID
+  Widget _buildPlayerCard(Player player) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.blue,
-          child: Text('P', style: const TextStyle(color: Colors.white)),
+        leading: Hero(
+          tag: 'player-${player.id}',
+          child: CircleAvatar(
+            backgroundColor: Colors.blue,
+            child: ClipOval(
+              child: Image.network(
+                player.photo,
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.person, color: Colors.white);
+                },
+              ),
+            ),
+          ),
         ),
-        title: Text('Player #$playerId'),
-        subtitle: const Text('Tap to view details'),
+        title: Text(player.name),
+        subtitle: Text('${player.position} • ${player.nationality}'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -232,33 +277,47 @@ class _FavoritesPageState extends State<FavoritesPage>
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _removePlayerFromFavorites(playerId),
+              onPressed: () => _removePlayerFromFavorites(player.id),
               tooltip: 'Remove from favorites',
             ),
           ],
         ),
         onTap: () {
-          // Note: In a real app, you would navigate to player detail
-          // For now, we'll show a placeholder
-          _showPlayerNotAvailable(playerId);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PlayerDetailPage(player: player),
+            ),
+          ).then((_) => _loadFavorites()); // Refresh when coming back
         },
       ),
     );
   }
 
-  Widget _buildTeamCard(int teamId) {
-    // Note: In a real app, you would fetch team data from your API or database
-    // For now, we'll show a placeholder card with the team ID
+  Widget _buildTeamCard(Team team) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: Colors.green,
-          child: Text('T', style: const TextStyle(color: Colors.white)),
+        leading: Hero(
+          tag: 'team-${team.id}',
+          child: CircleAvatar(
+            backgroundColor: Colors.green,
+            child: ClipOval(
+              child: Image.network(
+                team.logo,
+                width: 40,
+                height: 40,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.sports_soccer, color: Colors.white);
+                },
+              ),
+            ),
+          ),
         ),
-        title: Text('Team #$teamId'),
-        subtitle: const Text('Tap to view details'),
+        title: Text(team.name),
+        subtitle: Text('${team.country} • ${team.venueName}'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -266,15 +325,16 @@ class _FavoritesPageState extends State<FavoritesPage>
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _removeTeamFromFavorites(teamId),
+              onPressed: () => _removeTeamFromFavorites(team.id),
               tooltip: 'Remove from favorites',
             ),
           ],
         ),
         onTap: () {
-          // Note: In a real app, you would navigate to team detail
-          // For now, we'll show a placeholder
-          _showTeamNotAvailable(teamId);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => TeamDetailPage(team: team)),
+          ).then((_) => _loadFavorites()); // Refresh when coming back
         },
       ),
     );
@@ -350,47 +410,5 @@ class _FavoritesPageState extends State<FavoritesPage>
         );
       }
     }
-  }
-
-  void _showPlayerNotAvailable(int playerId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Player Details'),
-          content: Text(
-            'Player #$playerId details would be shown here.\n\n'
-            'In a complete implementation, this would fetch player data and navigate to the PlayerDetailPage.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showTeamNotAvailable(int teamId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Team Details'),
-          content: Text(
-            'Team #$teamId details would be shown here.\n\n'
-            'In a complete implementation, this would fetch team data and navigate to the TeamDetailPage.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }
