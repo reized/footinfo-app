@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:footinfo_app/views/favorite_page.dart';
+import 'package:footinfo_app/views/favorites_page.dart';
 import 'package:footinfo_app/views/browse_page.dart';
 import 'package:footinfo_app/views/feedback_page.dart';
 import 'package:footinfo_app/views/home_page.dart';
@@ -19,7 +19,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const BrowsePage(),
-    const FavoritePage(),
+    const FavoritesPage(),
     const FeedbackPage(),
     const ProfilePage(),
   ];

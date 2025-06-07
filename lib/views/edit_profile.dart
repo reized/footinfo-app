@@ -18,6 +18,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
   String? _imagePath;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -38,6 +39,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _saveProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final updatedUser = UserModel(
       id: widget.user.id,
       username: _usernameController.text,
@@ -63,27 +68,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage:
-                    _imagePath != null ? FileImage(File(_imagePath!)) : null,
+                backgroundImage: _imagePath != null
+                    ? FileImage(File(_imagePath!))
+                    : null,
                 child: _imagePath == null ? const Icon(Icons.camera_alt) : null,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
+            // Username field
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username'),
+              decoration: InputDecoration(
+                labelText: 'Username',
+                prefixIcon: const Icon(Icons.person),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            // Bio field
             TextField(
               controller: _bioController,
-              decoration: const InputDecoration(labelText: 'Bio'),
               maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Bio',
+                prefixIcon: const Icon(Icons.description),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 16,
+                ),
+                alignLabelWithHint: true,
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            // Add this button style
             ElevatedButton(
-              onPressed: _saveProfile,
-              child: const Text('Save Changes'),
-            )
+              onPressed: _isLoading ? null : () => _saveProfile(),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Save Changes', style: TextStyle(fontSize: 16)),
+            ),
           ],
         ),
       ),
